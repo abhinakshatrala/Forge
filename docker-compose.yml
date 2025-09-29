@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  mcp-forge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mcp-forge
+    ports:
+      - "8788:8788"  # Business UI
+      - "8787:8787"  # Observability dashboard
+      - "8443:8443"  # HTTPS MCP server
+    volumes:
+      - mcp-data:/var/lib/mcp/data
+      - mcp-logs:/var/log/mcp
+      - ./config:/app/config:ro
+    environment:
+      - MCP_DATA_ROOT=/var/lib/mcp/data
+      - MCP_SCHEMA_PATH=/var/lib/mcp/schemas
+      - MCP_UI_BIND=0.0.0.0:8788
+      - MCP_LOG_LEVEL=INFO
+      - MCP_DEFAULT_DENY_EGRESS=true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8788/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Local LLM services
+  llm-small:
+    image: ghcr.io/ggerganov/llama.cpp:server
+    container_name: mcp-llm-small
+    ports:
+      - "9001:8080"
+    volumes:
+      - ./models:/models:ro
+    command: [
+      "--model", "/models/llama-2-7b-chat.gguf",
+      "--host", "0.0.0.0",
+      "--port", "8080",
+      "--ctx-size", "4096",
+      "--threads", "4"
+    ]
+    restart: unless-stopped
+    profiles: ["llm"]
+
+  llm-medium:
+    image: vllm/vllm-openai:latest
+    container_name: mcp-llm-medium
+    ports:
+      - "9002:8000"
+    volumes:
+      - ./models:/models:ro
+      - llm-cache:/root/.cache
+    environment:
+      - MODEL_NAME=meta-llama/Llama-2-13b-chat-hf
+      - HOST=0.0.0.0
+      - PORT=8000
+    command: [
+      "--model", "/models/llama-2-13b-chat",
+      "--host", "0.0.0.0",
+      "--port", "8000",
+      "--max-model-len", "8192"
+    ]
+    restart: unless-stopped
+    profiles: ["llm"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Optional: Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    profiles: ["cache"]
+
+  # Optional: Monitoring with Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mcp-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    profiles: ["monitoring"]
+
+  # Optional: Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mcp-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    profiles: ["monitoring"]
+
+volumes:
+  mcp-data:
+    driver: local
+  mcp-logs:
+    driver: local
+  llm-cache:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  default:
+    name: mcp-forge-network

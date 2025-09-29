@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://forge.dev/schemas/requirements-1.0.0.json",
+  "title": "Product Manager Requirements Schema",
+  "description": "Schema for capturing business requirements from PM persona",
+  "type": "object",
+  "required": ["metadata", "requirements", "acceptance_criteria"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["version", "created_at", "author", "project_id"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Semantic version of this requirements document"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when requirements were created"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when requirements were last updated"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author of the requirements document"
+        },
+        "project_id": {
+          "type": "string",
+          "description": "Unique identifier for the project"
+        },
+        "provenance": {
+          "type": "string",
+          "description": "Source or origin of these requirements"
+        },
+        "data_classification": {
+          "type": "string",
+          "enum": ["public", "internal", "confidential", "restricted"],
+          "default": "internal"
+        },
+        "checksum": {
+          "type": "string",
+          "description": "SHA-256 checksum of the requirements content"
+        }
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "description", "priority", "complexity"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^REQ-\\d+$",
+            "description": "Unique requirement identifier"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 100,
+            "description": "Brief title of the requirement"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10,
+            "description": "Detailed description of the requirement"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"],
+            "description": "Business priority of the requirement"
+          },
+          "complexity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "Complexity rating from 1-10"
+          },
+          "business_value": {
+            "type": "string",
+            "description": "Expected business value or impact"
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^REQ-\\d+$"
+            },
+            "description": "List of requirement IDs this depends on"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Tags for categorization"
+          }
+        }
+      }
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["requirement_id", "criteria"],
+        "properties": {
+          "requirement_id": {
+            "type": "string",
+            "pattern": "^REQ-\\d+$",
+            "description": "Reference to requirement ID"
+          },
+          "criteria": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["id", "description", "testable"],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^AC-\\d+$",
+                  "description": "Unique acceptance criteria identifier"
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 10,
+                  "description": "Clear, testable acceptance criteria"
+                },
+                "testable": {
+                  "type": "boolean",
+                  "description": "Whether this criteria can be automatically tested"
+                },
+                "test_method": {
+                  "type": "string",
+                  "enum": ["unit", "integration", "e2e", "manual"],
+                  "description": "Suggested testing method"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "budget": {
+          "type": "object",
+          "properties": {
+            "time_budget_hours": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum time budget in hours"
+            },
+            "compute_budget": {
+              "type": "string",
+              "description": "Compute resource constraints"
+            }
+          }
+        },
+        "technical": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Technical constraints or limitations"
+        },
+        "regulatory": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Regulatory or compliance requirements"
+        }
+      }
+    },
+    "stakeholders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "role", "involvement"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Stakeholder name"
+          },
+          "role": {
+            "type": "string",
+            "description": "Stakeholder role or title"
+          },
+          "involvement": {
+            "type": "string",
+            "enum": ["owner", "approver", "contributor", "informed"],
+            "description": "Level of involvement in the project"
+          },
+          "contact": {
+            "type": "string",
+            "description": "Contact information"
+          }
+        }
+      }
+    }
+  }
+}

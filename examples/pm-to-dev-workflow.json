@@ -1,0 +1,138 @@
+[
+  {
+    "id": "validate-pm-requirements",
+    "name": "Validate PM Requirements",
+    "description": "Validate PM requirements against schema",
+    "handler": "validate_schema",
+    "params": {
+      "schema_id": "https://forge.dev/schemas/requirements-1.0.0.json"
+    },
+    "timeout_seconds": 60,
+    "retry_config": {
+      "strategy": "exponential",
+      "base_ms": 1000,
+      "max_retries": 3
+    }
+  },
+  {
+    "id": "generate-pm-artifact",
+    "name": "Generate PM Artifact",
+    "description": "Save validated PM requirements as artifact",
+    "handler": "generate_artifact",
+    "params": {
+      "profile": "pm",
+      "version": "1.0.0"
+    },
+    "depends_on": ["validate-pm-requirements"],
+    "timeout_seconds": 120
+  },
+  {
+    "id": "transform-pm-to-tpm",
+    "name": "Transform PM to TPM",
+    "description": "Auto-transform PM requirements to TPM technical implementation",
+    "handler": "transform_artifact",
+    "params": {
+      "from_profile": "pm",
+      "to_profile": "tpm",
+      "from_version": "1.0.0"
+    },
+    "depends_on": ["generate-pm-artifact"],
+    "timeout_seconds": 300,
+    "retry_config": {
+      "strategy": "exponential",
+      "base_ms": 2000,
+      "max_retries": 2
+    }
+  },
+  {
+    "id": "validate-tpm-implementation",
+    "name": "Validate TPM Implementation",
+    "description": "Validate TPM technical implementation against schema",
+    "handler": "validate_schema",
+    "params": {
+      "schema_id": "https://forge.dev/schemas/technical-impl-1.0.0.json"
+    },
+    "depends_on": ["transform-pm-to-tpm"],
+    "timeout_seconds": 60
+  },
+  {
+    "id": "enhance-tpm-with-llm",
+    "name": "Enhance TPM with LLM",
+    "description": "Use LLM to enhance technical implementation details",
+    "handler": "route_llm",
+    "params": {
+      "task": "design-elaboration",
+      "complexity": 6,
+      "profile": "tpm",
+      "prompt": "Review and enhance the technical implementation with detailed architecture patterns, security considerations, and performance optimizations."
+    },
+    "depends_on": ["validate-tpm-implementation"],
+    "timeout_seconds": 180
+  },
+  {
+    "id": "transform-tpm-to-dev",
+    "name": "Transform TPM to Dev",
+    "description": "Auto-transform TPM implementation to Dev tasks",
+    "handler": "transform_artifact",
+    "params": {
+      "from_profile": "tpm",
+      "to_profile": "dev",
+      "from_version": "1.0.0"
+    },
+    "depends_on": ["enhance-tpm-with-llm"],
+    "timeout_seconds": 300
+  },
+  {
+    "id": "validate-dev-tasks",
+    "name": "Validate Dev Tasks",
+    "description": "Validate development tasks against schema",
+    "handler": "validate_schema",
+    "params": {
+      "schema_id": "https://forge.dev/schemas/dev-tasks-1.0.0.json"
+    },
+    "depends_on": ["transform-tpm-to-dev"],
+    "timeout_seconds": 60
+  },
+  {
+    "id": "generate-test-cases",
+    "name": "Generate Test Cases",
+    "description": "Use LLM to generate comprehensive test cases",
+    "handler": "route_llm",
+    "params": {
+      "task": "unit-tests",
+      "complexity": 4,
+      "profile": "dev",
+      "prompt": "Generate comprehensive unit test cases for all development tasks, including edge cases and error scenarios."
+    },
+    "depends_on": ["validate-dev-tasks"],
+    "timeout_seconds": 240
+  },
+  {
+    "id": "save-checkpoint",
+    "name": "Save Workflow Checkpoint",
+    "description": "Save workflow progress checkpoint",
+    "handler": "save_checkpoint",
+    "params": {
+      "data": {
+        "pm_version": "1.0.0",
+        "tpm_version": "1.0.0", 
+        "dev_version": "1.0.0",
+        "workflow_stage": "dev_tasks_ready"
+      }
+    },
+    "depends_on": ["generate-test-cases"],
+    "timeout_seconds": 30
+  },
+  {
+    "id": "notify-completion",
+    "name": "Notify Workflow Completion",
+    "description": "Send notification that PM to Dev transformation is complete",
+    "handler": "notify",
+    "params": {
+      "message": "PM to Dev workflow completed successfully. Development tasks are ready for implementation.",
+      "recipients": ["dev-team@company.com", "pm@company.com"]
+    },
+    "depends_on": ["save-checkpoint"],
+    "timeout_seconds": 30
+  }
+]

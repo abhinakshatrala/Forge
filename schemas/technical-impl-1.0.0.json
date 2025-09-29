@@ -1,0 +1,514 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://forge.dev/schemas/technical-impl-1.0.0.json",
+  "title": "Technical Implementation Schema",
+  "description": "Schema for technical implementation details from TPM persona",
+  "type": "object",
+  "required": ["metadata", "architecture", "implementation_plan", "nfrs"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["version", "created_at", "author", "project_id", "requirements_version"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Semantic version of this technical implementation"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when implementation was created"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when implementation was last updated"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author of the technical implementation"
+        },
+        "project_id": {
+          "type": "string",
+          "description": "Unique identifier for the project"
+        },
+        "requirements_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Version of requirements this implementation is based on"
+        },
+        "provenance": {
+          "type": "string",
+          "description": "Source or origin of this implementation"
+        },
+        "data_classification": {
+          "type": "string",
+          "enum": ["public", "internal", "confidential", "restricted"],
+          "default": "internal"
+        },
+        "checksum": {
+          "type": "string",
+          "description": "SHA-256 checksum of the implementation content"
+        }
+      }
+    },
+    "architecture": {
+      "type": "object",
+      "required": ["components", "data_flow", "technology_stack"],
+      "properties": {
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "type", "responsibilities"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^COMP-\\d+$",
+                "description": "Unique component identifier"
+              },
+              "name": {
+                "type": "string",
+                "description": "Component name"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["service", "database", "queue", "cache", "gateway", "ui", "library"],
+                "description": "Type of component"
+              },
+              "responsibilities": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "List of component responsibilities"
+              },
+              "interfaces": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "type", "protocol"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Interface name"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": ["api", "event", "database", "file"],
+                      "description": "Interface type"
+                    },
+                    "protocol": {
+                      "type": "string",
+                      "description": "Communication protocol"
+                    },
+                    "schema": {
+                      "type": "string",
+                      "description": "Reference to interface schema"
+                    }
+                  }
+                }
+              },
+              "dependencies": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^COMP-\\d+$"
+                },
+                "description": "List of component dependencies"
+              }
+            }
+          }
+        },
+        "data_flow": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to", "data_type", "frequency"],
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Source component or external system"
+              },
+              "to": {
+                "type": "string",
+                "description": "Destination component or external system"
+              },
+              "data_type": {
+                "type": "string",
+                "description": "Type of data being transferred"
+              },
+              "frequency": {
+                "type": "string",
+                "enum": ["real-time", "batch", "on-demand", "scheduled"],
+                "description": "Data transfer frequency"
+              },
+              "volume": {
+                "type": "string",
+                "description": "Expected data volume"
+              },
+              "security_requirements": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Security requirements for this data flow"
+              }
+            }
+          }
+        },
+        "technology_stack": {
+          "type": "object",
+          "required": ["languages", "frameworks", "databases", "infrastructure"],
+          "properties": {
+            "languages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "version", "purpose"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Programming language name"
+                  },
+                  "version": {
+                    "type": "string",
+                    "description": "Language version requirement"
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "description": "Purpose or use case for this language"
+                  }
+                }
+              }
+            },
+            "frameworks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "version", "component"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Framework name"
+                  },
+                  "version": {
+                    "type": "string",
+                    "description": "Framework version requirement"
+                  },
+                  "component": {
+                    "type": "string",
+                    "description": "Component that uses this framework"
+                  }
+                }
+              }
+            },
+            "databases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "type", "purpose"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Database name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["relational", "document", "key-value", "graph", "time-series"],
+                    "description": "Database type"
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "description": "Database purpose or use case"
+                  }
+                }
+              }
+            },
+            "infrastructure": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "type", "purpose"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Infrastructure component name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["container", "vm", "serverless", "cdn", "load-balancer", "message-queue"],
+                    "description": "Infrastructure type"
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "description": "Infrastructure purpose"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "implementation_plan": {
+      "type": "object",
+      "required": ["phases", "milestones", "risk_mitigation"],
+      "properties": {
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "duration_weeks", "deliverables", "requirements_covered"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^PHASE-\\d+$",
+                "description": "Unique phase identifier"
+              },
+              "name": {
+                "type": "string",
+                "description": "Phase name"
+              },
+              "duration_weeks": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Estimated duration in weeks"
+              },
+              "deliverables": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "List of phase deliverables"
+              },
+              "requirements_covered": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^REQ-\\d+$"
+                },
+                "description": "Requirements addressed in this phase"
+              },
+              "dependencies": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^PHASE-\\d+$"
+                },
+                "description": "Phase dependencies"
+              }
+            }
+          }
+        },
+        "milestones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "phase_id", "criteria"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^MILESTONE-\\d+$",
+                "description": "Unique milestone identifier"
+              },
+              "name": {
+                "type": "string",
+                "description": "Milestone name"
+              },
+              "phase_id": {
+                "type": "string",
+                "pattern": "^PHASE-\\d+$",
+                "description": "Associated phase"
+              },
+              "criteria": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Milestone completion criteria"
+              }
+            }
+          }
+        },
+        "risk_mitigation": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["risk", "probability", "impact", "mitigation_strategy"],
+            "properties": {
+              "risk": {
+                "type": "string",
+                "description": "Risk description"
+              },
+              "probability": {
+                "type": "string",
+                "enum": ["low", "medium", "high"],
+                "description": "Risk probability"
+              },
+              "impact": {
+                "type": "string",
+                "enum": ["low", "medium", "high"],
+                "description": "Risk impact"
+              },
+              "mitigation_strategy": {
+                "type": "string",
+                "description": "Strategy to mitigate the risk"
+              }
+            }
+          }
+        }
+      }
+    },
+    "nfrs": {
+      "type": "object",
+      "required": ["performance", "scalability", "reliability", "security"],
+      "properties": {
+        "performance": {
+          "type": "object",
+          "properties": {
+            "response_time_ms": {
+              "type": "object",
+              "properties": {
+                "p50": {"type": "integer", "minimum": 1},
+                "p95": {"type": "integer", "minimum": 1},
+                "p99": {"type": "integer", "minimum": 1}
+              }
+            },
+            "throughput_rps": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Required requests per second"
+            }
+          }
+        },
+        "scalability": {
+          "type": "object",
+          "properties": {
+            "concurrent_users": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum concurrent users"
+            },
+            "data_volume_gb": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Expected data volume in GB"
+            },
+            "horizontal_scaling": {
+              "type": "boolean",
+              "description": "Whether horizontal scaling is required"
+            }
+          }
+        },
+        "reliability": {
+          "type": "object",
+          "properties": {
+            "availability_percent": {
+              "type": "number",
+              "minimum": 90,
+              "maximum": 100,
+              "description": "Required availability percentage"
+            },
+            "mttr_minutes": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Mean time to recovery in minutes"
+            },
+            "backup_frequency": {
+              "type": "string",
+              "enum": ["real-time", "hourly", "daily", "weekly"],
+              "description": "Backup frequency requirement"
+            }
+          }
+        },
+        "security": {
+          "type": "object",
+          "properties": {
+            "authentication": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["api-key", "oauth2", "jwt", "mtls", "basic-auth"]
+              },
+              "description": "Supported authentication methods"
+            },
+            "authorization": {
+              "type": "string",
+              "enum": ["rbac", "abac", "acl"],
+              "description": "Authorization model"
+            },
+            "encryption": {
+              "type": "object",
+              "properties": {
+                "at_rest": {"type": "boolean"},
+                "in_transit": {"type": "boolean"},
+                "algorithm": {"type": "string"}
+              }
+            },
+            "compliance": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Compliance requirements"
+            }
+          }
+        }
+      }
+    },
+    "testing_strategy": {
+      "type": "object",
+      "properties": {
+        "unit_tests": {
+          "type": "object",
+          "properties": {
+            "coverage_percent": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Required unit test coverage"
+            },
+            "framework": {
+              "type": "string",
+              "description": "Testing framework to use"
+            }
+          }
+        },
+        "integration_tests": {
+          "type": "object",
+          "properties": {
+            "strategy": {
+              "type": "string",
+              "enum": ["contract", "component", "end-to-end"],
+              "description": "Integration testing strategy"
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Integration testing tools"
+            }
+          }
+        },
+        "performance_tests": {
+          "type": "object",
+          "properties": {
+            "load_testing": {"type": "boolean"},
+            "stress_testing": {"type": "boolean"},
+            "tools": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

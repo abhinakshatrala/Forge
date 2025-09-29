@@ -1,0 +1,562 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://forge.dev/schemas/dev-tasks-1.0.0.json",
+  "title": "Developer Tasks Schema",
+  "description": "Schema for development tasks and implementation details",
+  "type": "object",
+  "required": ["metadata", "tasks", "code_structure", "deployment"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["version", "created_at", "author", "project_id", "technical_impl_version"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Semantic version of this development plan"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when plan was created"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when plan was last updated"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author of the development plan"
+        },
+        "project_id": {
+          "type": "string",
+          "description": "Unique identifier for the project"
+        },
+        "technical_impl_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Version of technical implementation this is based on"
+        },
+        "provenance": {
+          "type": "string",
+          "description": "Source or origin of this development plan"
+        },
+        "data_classification": {
+          "type": "string",
+          "enum": ["public", "internal", "confidential", "restricted"],
+          "default": "internal"
+        },
+        "checksum": {
+          "type": "string",
+          "description": "SHA-256 checksum of the development plan content"
+        },
+        "requires_network": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether implementation requires network access"
+        },
+        "compute_budget": {
+          "type": "string",
+          "description": "Compute resource budget for implementation"
+        },
+        "time_budget_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Time budget for implementation in hours"
+        }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "description", "type", "priority", "estimated_hours"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^TASK-\\d+$",
+            "description": "Unique task identifier"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 100,
+            "description": "Brief task title"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10,
+            "description": "Detailed task description"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["feature", "bug", "refactor", "test", "documentation", "infrastructure"],
+            "description": "Type of development task"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"],
+            "description": "Task priority"
+          },
+          "estimated_hours": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Estimated hours to complete"
+          },
+          "component_id": {
+            "type": "string",
+            "pattern": "^COMP-\\d+$",
+            "description": "Associated component from technical implementation"
+          },
+          "requirements_covered": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^REQ-\\d+$"
+            },
+            "description": "Requirements this task addresses"
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^TASK-\\d+$"
+            },
+            "description": "Task dependencies"
+          },
+          "acceptance_criteria": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["description", "testable"],
+              "properties": {
+                "description": {
+                  "type": "string",
+                  "description": "Acceptance criteria description"
+                },
+                "testable": {
+                  "type": "boolean",
+                  "description": "Whether criteria can be automatically tested"
+                },
+                "test_command": {
+                  "type": "string",
+                  "description": "Command to run to test this criteria"
+                }
+              }
+            }
+          },
+          "files_to_modify": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["path", "action"],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "File path relative to project root"
+                },
+                "action": {
+                  "type": "string",
+                  "enum": ["create", "modify", "delete"],
+                  "description": "Action to perform on the file"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of changes to make"
+                }
+              }
+            }
+          },
+          "ide_hints": {
+            "type": "object",
+            "properties": {
+              "windsurf": {
+                "type": "object",
+                "properties": {
+                  "suggested_commands": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                  },
+                  "file_templates": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                  }
+                }
+              },
+              "claude_code": {
+                "type": "object",
+                "properties": {
+                  "context_files": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                  },
+                  "suggested_approach": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "code_structure": {
+      "type": "object",
+      "required": ["directories", "key_files", "dependencies"],
+      "properties": {
+        "directories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "purpose"],
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Directory path relative to project root"
+              },
+              "purpose": {
+                "type": "string",
+                "description": "Purpose of this directory"
+              },
+              "create_if_missing": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether to create directory if it doesn't exist"
+              }
+            }
+          }
+        },
+        "key_files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "purpose", "template"],
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "File path relative to project root"
+              },
+              "purpose": {
+                "type": "string",
+                "description": "Purpose of this file"
+              },
+              "template": {
+                "type": "string",
+                "description": "Template or boilerplate for this file"
+              },
+              "language": {
+                "type": "string",
+                "description": "Programming language for this file"
+              }
+            }
+          }
+        },
+        "dependencies": {
+          "type": "object",
+          "properties": {
+            "runtime": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "version"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Dependency name"
+                  },
+                  "version": {
+                    "type": "string",
+                    "description": "Version requirement"
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "description": "Why this dependency is needed"
+                  }
+                }
+              }
+            },
+            "development": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "version"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Development dependency name"
+                  },
+                  "version": {
+                    "type": "string",
+                    "description": "Version requirement"
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "description": "Why this dependency is needed"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "testing": {
+      "type": "object",
+      "properties": {
+        "unit_tests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["file_path", "test_cases"],
+            "properties": {
+              "file_path": {
+                "type": "string",
+                "description": "Path to test file"
+              },
+              "test_cases": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "description"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Test case name"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "What this test verifies"
+                    },
+                    "setup": {
+                      "type": "string",
+                      "description": "Test setup requirements"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "integration_tests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "description", "components"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Integration test name"
+              },
+              "description": {
+                "type": "string",
+                "description": "What this integration test verifies"
+              },
+              "components": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Components involved in this test"
+              }
+            }
+          }
+        },
+        "test_commands": {
+          "type": "object",
+          "properties": {
+            "unit": {
+              "type": "string",
+              "description": "Command to run unit tests"
+            },
+            "integration": {
+              "type": "string",
+              "description": "Command to run integration tests"
+            },
+            "coverage": {
+              "type": "string",
+              "description": "Command to generate test coverage report"
+            }
+          }
+        }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "required": ["environment", "build_steps", "run_steps"],
+      "properties": {
+        "environment": {
+          "type": "object",
+          "properties": {
+            "python_version": {
+              "type": "string",
+              "description": "Required Python version"
+            },
+            "environment_variables": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "description"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Environment variable name"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Purpose of this environment variable"
+                  },
+                  "default_value": {
+                    "type": "string",
+                    "description": "Default value if not set"
+                  },
+                  "required": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether this variable is required"
+                  }
+                }
+              }
+            },
+            "system_requirements": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "System-level requirements"
+            }
+          }
+        },
+        "build_steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "command"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Build step name"
+              },
+              "command": {
+                "type": "string",
+                "description": "Command to execute"
+              },
+              "description": {
+                "type": "string",
+                "description": "What this step does"
+              },
+              "working_directory": {
+                "type": "string",
+                "description": "Working directory for this command"
+              }
+            }
+          }
+        },
+        "run_steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "command"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Run step name"
+              },
+              "command": {
+                "type": "string",
+                "description": "Command to execute"
+              },
+              "description": {
+                "type": "string",
+                "description": "What this step does"
+              },
+              "background": {
+                "type": "boolean",
+                "default": false,
+                "description": "Whether to run this command in background"
+              }
+            }
+          }
+        },
+        "health_checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "endpoint"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Health check name"
+              },
+              "endpoint": {
+                "type": "string",
+                "description": "Endpoint to check"
+              },
+              "expected_status": {
+                "type": "integer",
+                "default": 200,
+                "description": "Expected HTTP status code"
+              },
+              "timeout_seconds": {
+                "type": "integer",
+                "default": 30,
+                "description": "Timeout for health check"
+              }
+            }
+          }
+        }
+      }
+    },
+    "workflow_integration": {
+      "type": "object",
+      "properties": {
+        "ide_handoff": {
+          "type": "object",
+          "properties": {
+            "windsurf": {
+              "type": "object",
+              "properties": {
+                "project_config": {
+                  "type": "string",
+                  "description": "Windsurf project configuration"
+                },
+                "recommended_extensions": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                }
+              }
+            },
+            "claude_code": {
+              "type": "object",
+              "properties": {
+                "context_strategy": {
+                  "type": "string",
+                  "description": "Strategy for providing context to Claude Code"
+                },
+                "file_priorities": {
+                  "type": "array",
+                  "items": {"type": "string"},
+                  "description": "Files to prioritize in context"
+                }
+              }
+            }
+          }
+        },
+        "automation": {
+          "type": "object",
+          "properties": {
+            "pre_commit_hooks": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "ci_cd_pipeline": {
+              "type": "string",
+              "description": "CI/CD pipeline configuration"
+            }
+          }
+        }
+      }
+    }
+  }
+}

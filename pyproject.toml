@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-forge"
+version = "1.0.0"
+description = "Local-first Model Context Protocol server with JSON-RPC, schema validation, and workflow orchestration"
+authors = [{name = "Forge Team", email = "team@forge.dev"}]
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "fastapi>=0.104.1",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.5.0",
+    "jsonschema>=4.20.0",
+    "aiofiles>=23.2.1",
+    "websockets>=12.0",
+    "cryptography>=46.0.0",
+    "python-multipart>=0.0.6",
+    "jinja2>=3.1.2",
+    "httpx>=0.25.2",
+    "watchfiles>=0.21.0",
+    "typer>=0.9.0",
+    "rich>=13.7.0",
+    "pyyaml>=6.0.1",
+]
+
+[project.scripts]
+mcp-forge = "mcp_forge.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/forge/mcp-forge"
+Repository = "https://github.com/forge/mcp-forge"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mcp_forge*"]

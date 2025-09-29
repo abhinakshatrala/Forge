@@ -1,0 +1,509 @@
+Metadata-Version: 2.4
+Name: mcp-forge
+Version: 1.0.0
+Summary: Local-first Model Context Protocol server with JSON-RPC, schema validation, and workflow orchestration
+Author-email: Forge Team <team@forge.dev>
+Project-URL: Homepage, https://github.com/forge/mcp-forge
+Project-URL: Repository, https://github.com/forge/mcp-forge
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: fastapi>=0.104.1
+Requires-Dist: uvicorn>=0.24.0
+Requires-Dist: pydantic>=2.5.0
+Requires-Dist: jsonschema>=4.20.0
+Requires-Dist: aiofiles>=23.2.1
+Requires-Dist: websockets>=12.0
+Requires-Dist: cryptography>=46.0.0
+Requires-Dist: python-multipart>=0.0.6
+Requires-Dist: jinja2>=3.1.2
+Requires-Dist: httpx>=0.25.2
+Requires-Dist: watchfiles>=0.21.0
+Requires-Dist: typer>=0.9.0
+Requires-Dist: rich>=13.7.0
+Requires-Dist: pyyaml>=6.0.1
+Dynamic: license-file
+
+# MCP Forge
+
+**Local-first Model Context Protocol Server with JSON-RPC, Schema Validation, and Workflow Orchestration**
+
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![MCP Protocol](https://img.shields.io/badge/MCP-2024--11--05-green.svg)](https://modelcontextprotocol.io/)
+
+MCP Forge is a comprehensive implementation of the Model Context Protocol (MCP) designed for local-first development workflows. It provides a complete pipeline from business requirements capture to technical implementation, with built-in schema validation, LLM routing, and workflow orchestration.
+
+## 🚀 Quick Start
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/forge/mcp-forge.git
+cd mcp-forge
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install MCP Forge
+pip install -e .
+```
+
+### Initialize Project
+
+```bash
+# Initialize new MCP Forge project
+mcp-forge init .
+source config.env
+
+# Start business user interface
+mcp-forge ui
+
+# Start MCP server (in another terminal)
+mcp-forge serve --transport stdio
+```
+
+Visit `http://localhost:8788` to begin capturing requirements conversationally.
+
+## 🏗️ Architecture
+
+MCP Forge implements a multi-persona workflow:
+
+```mermaid
+graph TD
+    A[Business User] --> B[PM Requirements]
+    B --> C[TPM Technical Implementation]
+    C --> D[Dev Tasks]
+    D --> E[IDE Integration]
+    
+    F[Schema Registry] --> B
+    F --> C
+    F --> D
+    
+    G[LLM Router] --> B
+    G --> C
+    G --> D
+    
+    H[Workflow Engine] --> I[Artifact Manager]
+    I --> J[Version Control]
+```
+
+### Core Components
+
+- **🗣️ Business User UI**: Conversational requirements capture
+- **📋 Schema Registry**: JSON Schema validation with auto-repair
+- **🧠 LLM Router**: Stage-specific model routing and difficulty-aware selection
+- **⚙️ Workflow Engine**: Idempotent workflows with checkpoints and retry logic
+- **📦 Artifact Manager**: Versioned handoffs between personas (PM → TPM → Dev)
+- **🔌 MCP Server**: JSON-RPC 2.0 over stdio, unix socket, and HTTPS
+
+## 🎯 Features
+
+### ✅ Local-First Design
+- **Default-deny egress**: All operations local by default
+- **Offline capable**: Works without internet connectivity
+- **Local LLM integration**: Supports llama.cpp, vLLM, and structured output
+- **File-based storage**: No external databases required
+
+### ✅ Multi-Transport MCP Server
+- **stdio**: Direct IDE integration
+- **Unix socket**: High-performance local IPC
+- **HTTPS + SSE**: Web-based access with real-time updates
+- **mTLS support**: Secure communication with client certificates
+
+### ✅ Schema-Driven Validation
+- **JSON Schema 2020-12**: Latest schema specification
+- **Auto-repair**: Intelligent fixing of common validation errors
+- **Semantic diffs**: Track meaningful changes between versions
+- **Backward compatibility**: Automatic compatibility checking
+
+### ✅ Intelligent LLM Routing
+- **Stage-specific policies**: Different routing for PM, TPM, Dev personas
+- **Difficulty-aware**: Route based on task complexity
+- **Health monitoring**: Automatic failover to healthy models
+- **Cost optimization**: Balance quality, latency, and cost
+
+### ✅ Workflow Orchestration
+- **Idempotent execution**: Safe to retry failed workflows
+- **Checkpoint resume**: Continue from last successful step
+- **Dependency management**: Automatic step ordering
+- **Exponential backoff**: Intelligent retry strategies
+
+### ✅ IDE Integration
+- **Windsurf**: Native MCP support
+- **Claude Code**: Context-aware development
+- **VS Code**: JSON Schema validation and IntelliSense
+- **Universal**: Works with any MCP-compatible editor
+
+## 📊 Personas and Workflows
+
+### 👔 Business User → PM
+**Capture requirements conversationally**
+
+```bash
+# Start conversation UI
+mcp-forge ui
+
+# Or use CLI for batch processing
+mcp-forge artifact create --profile pm --data-file requirements.json
+```
+
+**Generated Artifacts:**
+- `pm-1.0.0.json`: Structured requirements
+- `pm-1.0.0.md`: Human-readable documentation
+- Validation against `requirements-1.0.0.json` schema
+
+### 🏗️ PM → TPM
+**Transform requirements into technical implementation**
+
+```bash
+# Auto-transform PM requirements to TPM specification
+mcp-forge artifact transform \
+  --from-profile pm \
+  --to-profile tpm \
+  --from-version 1.0.0
+```
+
+**Generated Artifacts:**
+- Architecture components and data flows
+- Technology stack recommendations
+- Implementation phases and milestones
+- Non-functional requirements (NFRs)
+- Risk mitigation strategies
+
+### 💻 TPM → Dev
+**Generate development tasks and implementation details**
+
+```bash
+# Transform technical implementation to development tasks
+mcp-forge artifact transform \
+  --from-profile tpm \
+  --to-profile dev \
+  --from-version 1.0.0
+```
+
+**Generated Artifacts:**
+- Detailed development tasks with acceptance criteria
+- Code structure and file organization
+- Testing strategy and test cases
+- Deployment configuration
+- IDE integration hints
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# Data directories
+export MCP_DATA_ROOT="/var/lib/mcp/data"
+export MCP_SCHEMA_PATH="/var/lib/mcp/schemas"
+
+# UI settings
+export MCP_UI_BIND="127.0.0.1:8788"
+
+# LLM endpoints
+export MCP_LLM_SMALL="http://127.0.0.1:9001"
+export MCP_LLM_MEDIUM="http://127.0.0.1:9002"
+export MCP_LLM_LARGE="http://127.0.0.1:9003"
+export MCP_LLM_STRUCTURED="http://127.0.0.1:9004"
+
+# Security settings
+export MCP_TLS_CA_PATH="/etc/mcp/ca.pem"
+export MCP_API_KEY="your-api-key-here"
+```
+
+### LLM Provider Setup
+
+MCP Forge supports multiple local LLM providers:
+
+#### llama.cpp
+```bash
+# Start llama.cpp server
+./llama-server --model model.gguf --port 9001
+```
+
+#### vLLM
+```bash
+# Start vLLM server
+python -m vllm.entrypoints.api_server \
+  --model meta-llama/Llama-2-7b-chat-hf \
+  --port 9002
+```
+
+#### Structured Output
+```bash
+# Start JSON mode endpoint
+python -m vllm.entrypoints.api_server \
+  --model microsoft/DialoGPT-medium \
+  --port 9004 \
+  --enable-json-mode
+```
+
+## 📚 Usage Examples
+
+### Schema Validation
+
+```bash
+# Validate requirements document
+mcp-forge validate requirements.json schemas/requirements-1.0.0.json
+
+# Auto-repair validation errors
+mcp-forge validate requirements.json schemas/requirements-1.0.0.json --auto-repair
+
+# Check schema compatibility
+mcp-forge schema compatibility \
+  --schema requirements-1.0.0.json \
+  --old-version 1.0.0 \
+  --new-version 1.1.0
+```
+
+### Workflow Management
+
+```bash
+# Create workflow from JSON definition
+mcp-forge workflow create \
+  --name "Requirements Processing" \
+  --steps-file workflow-steps.json
+
+# Execute workflow with checkpoint resume
+mcp-forge workflow execute <workflow-id> --resume-from-checkpoint
+
+# Monitor workflow progress
+mcp-forge workflow status <workflow-id>
+
+# List all workflows
+mcp-forge workflow list --status running
+```
+
+### Artifact Management
+
+```bash
+# List all artifacts
+mcp-forge artifact list
+
+# List artifacts for specific profile
+mcp-forge artifact list --profile pm
+
+# Load artifact data
+mcp-forge artifact load --profile pm --version 1.0.0
+
+# Generate artifact diff
+mcp-forge artifact diff \
+  --profile pm \
+  --from-version 1.0.0 \
+  --to-version 1.1.0
+```
+
+### Health Monitoring
+
+```bash
+# System health check
+mcp-forge health
+
+# LLM provider health check
+mcp-forge health --llm-only
+
+# Check specific components
+mcp-forge health --components="schema_registry,llm_router"
+```
+
+## 🧪 Testing
+
+### Unit Tests
+```bash
+# Run all unit tests
+python -m pytest tests/unit/ -v
+
+# Run with coverage
+python -m pytest tests/unit/ --cov=mcp_forge --cov-report=html
+
+# Test specific component
+python -m pytest tests/unit/test_schema_registry.py -v
+```
+
+### Integration Tests
+```bash
+# Run integration tests
+python -m pytest tests/integration/ -v
+
+# Test end-to-end workflows
+python -m pytest tests/integration/test_pm_to_dev_workflow.py
+
+# Test with real LLM endpoints
+python -m pytest tests/integration/ --llm-endpoints
+```
+
+### Performance Tests
+```bash
+# Load testing
+python -m pytest tests/performance/test_load.py
+
+# Benchmark critical paths
+python -m pytest tests/performance/test_benchmarks.py --benchmark-only
+
+# Memory profiling
+python -m pytest tests/performance/test_memory.py --profile
+```
+
+## 🔒 Security
+
+### Authentication
+- **API Keys**: Header-based authentication
+- **mTLS**: Mutual TLS with client certificates
+- **Local CA**: Self-signed certificate authority for development
+
+### Authorization
+- **Scopes**: read, write, execute permissions
+- **Tool Allowlist**: Restrict available MCP tools
+- **Input Validation**: Comprehensive input sanitization
+
+### Privacy
+- **Local-only**: No data leaves your environment by default
+- **Audit Logging**: Tamper-evident audit trail
+- **Encryption**: TLS 1.2+ in transit, optional at rest
+
+## 📈 Observability
+
+### Metrics Dashboard
+```bash
+# Start observability dashboard
+mcp-forge serve --enable-dashboard
+
+# Access at http://localhost:8787
+```
+
+**Available Metrics:**
+- Request latency (P50, P95, P99)
+- LLM usage and performance
+- Workflow execution statistics
+- Schema validation success rates
+- Error taxonomy and trends
+
+### Logging
+- **Structured Logging**: JSON format with correlation IDs
+- **Log Levels**: DEBUG, INFO, WARN, ERROR with filtering
+- **Audit Trail**: Immutable log of all operations
+- **Local Storage**: Logs stored in `/var/log/mcp/`
+
+### Alerting
+```bash
+# Configure alerts
+export MCP_ALERTS_ENABLED=true
+export MCP_ALERT_WEBHOOK="http://localhost:9000/webhook"
+
+# Alert rules
+export MCP_ALERT_VALIDATION_FAILURES_THRESHOLD=5
+export MCP_ALERT_LATENCY_P99_THRESHOLD=500
+```
+
+## 🚀 Deployment
+
+### Docker
+```bash
+# Build image
+docker build -t mcp-forge:latest .
+
+# Run with Docker Compose
+docker-compose up -d
+```
+
+### Systemd Service
+```bash
+# Install systemd unit
+sudo cp mcp-forge.service /etc/systemd/system/
+sudo systemctl enable mcp-forge
+sudo systemctl start mcp-forge
+```
+
+### Kubernetes (Optional)
+```bash
+# Deploy to K3s
+kubectl apply -f k8s/
+```
+
+## 🛠️ Development
+
+### Contributing
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open Pull Request
+
+### Development Setup
+```bash
+# Install development dependencies
+pip install -r requirements-dev.txt
+
+# Install pre-commit hooks
+pre-commit install
+
+# Run code quality checks
+pre-commit run --all-files
+
+# Start development server
+python -m mcp_forge.main
+```
+
+### Architecture Decisions
+- **Local-first**: Prioritize offline capability and data sovereignty
+- **Schema-driven**: Use JSON Schema for validation and documentation
+- **Persona-based**: Separate concerns by user role (Business, PM, TPM, Dev)
+- **Workflow-oriented**: Model complex processes as executable workflows
+- **MCP-native**: Full compliance with Model Context Protocol specification
+
+## 📋 Roadmap
+
+### v1.1 (Next Release)
+- [ ] Advanced LLM fine-tuning integration
+- [ ] GraphQL API for artifact queries
+- [ ] Real-time collaboration features
+- [ ] Enhanced IDE plugins
+
+### v1.2 (Future)
+- [ ] Multi-project workspace support
+- [ ] Advanced analytics and reporting
+- [ ] Plugin architecture for extensions
+- [ ] Cloud deployment options
+
+### v2.0 (Long-term)
+- [ ] Distributed deployment support
+- [ ] Advanced AI-powered code generation
+- [ ] Integration with popular project management tools
+- [ ] Enterprise features and SSO
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Support
+
+- **Documentation**: [docs/](docs/)
+- **Issues**: [GitHub Issues](https://github.com/forge/mcp-forge/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/forge/mcp-forge/discussions)
+- **Email**: support@forge.dev
+
+## 🙏 Acknowledgments
+
+- **Model Context Protocol**: [modelcontextprotocol.io](https://modelcontextprotocol.io/)
+- **JSON Schema**: [json-schema.org](https://json-schema.org/)
+- **FastAPI**: [fastapi.tiangolo.com](https://fastapi.tiangolo.com/)
+- **Pydantic**: [pydantic-docs.helpmanual.io](https://pydantic-docs.helpmanual.io/)
+
+---
+
+**MCP Forge** - Empowering local-first development with intelligent workflow orchestration.
+
+*Built with ❤️ for developers who value privacy, control, and intelligent automation.*
